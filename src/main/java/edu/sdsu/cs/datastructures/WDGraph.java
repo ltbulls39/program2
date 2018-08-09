@@ -4,7 +4,12 @@ package edu.sdsu.cs.datastructures;
 import java.util.*;
 
 public class WDGraph<V, E> implements IGraph<V, E> {
+    private Set<V> nameSet;
     private Map<IVertex<V>, LinkedList<IEdge<E>>> graph;
+
+    //    FIXME remove unused
+    private Map<V, LinkedList<IEdge<E>>> map;
+//    FIXME remove unused
 
     private int vertices;
     private int edges;
@@ -12,9 +17,14 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
 
     public WDGraph() {
-        graph = new HashMap<>();
+        map = new HashMap<>();
+        nameSet = new HashSet<>();
         vertices = 0;
         edges = 0;
+
+        //    FIXME remove unused
+        graph = new HashMap<>();
+        //    FIXME remove unused
     }
 
 
@@ -67,36 +77,72 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
     @Override
     public Iterable<IEdge<E>> shortestPath(IVertex<V> start, IVertex<V> end) {
+        Map<IVertex<V>, Integer> distanceTable = initMap();
+        Queue<IVertex<V>> priorityQueue = new PriorityQueue<>();
+        distanceTable.put(start, 0);
+
+        priorityQueue.offer(start);
+
+        while (!priorityQueue.isEmpty()) {
+            IVertex<V> current = priorityQueue.poll();
+            if (distanceTable.get(current) != -1) {
+                continue;
+            }
+//            TODO change this so it maps to its distance from the node
+            distanceTable.put(current, 1);
+            LinkedList<IEdge<E>> tempList = graph.get(current);
+            for (IEdge<E> edge : tempList) {
+
+            }
+        }
+
         return null;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void connectVertices(IVertex<V> start, IVertex<V> end, int weight) {
+        E cost = (E) new Integer(weight);
+        if (!nameSet.contains(start.getName()) || !nameSet.contains(end.getName())) {
+            System.out.println("Cannot connect the two vertices since one or more of them are not in our graph yet");
+            return;
+        }
 
+
+        IEdge<E> newEdge = new WeightedEdge<>(start, end, cost);
+        LinkedList<IEdge<E>> tempList = graph.get(start);
+        tempList.add(newEdge);
     }
 
     @Override
     public void addVertex(IVertex<V> toAdd) {
-//        TODO check if toAdd is already in the list
+        V name = toAdd.getName();
+        if (!nameSet.add(name)) {
+            System.out.println("Cannot add " + name + " to our list, already in it");
+            return;
+        }
+
         graph.put(toAdd, new LinkedList<IEdge<E>>());
         vertices++;
     }
 
     @Override
     public void addEdge(IEdge<E> toAdd) {
+        /**
+         * Cases
+         *  - StartNode is not in the map
+         *  - EndNode is not in the map
+         */
 
-        WeightedEdge<E> temp = ((WeightedEdge<E>)toAdd);
+        if (!nameSet.contains(toAdd.getStartVertex().getName()))
+            System.out.println("Given starting vertex is not actually in the graph yet");
+        if (!nameSet.contains(toAdd.getEndVertex().getName()))
+            System.out.println("Given ending vertex is not actually in the graph yet");
+
         LinkedList<IEdge<E>> list;
-
-//        Case: Start is actually in the map
-        if (graph.containsKey(temp.startVertex)) {
-            list = graph.get(temp.startVertex);
-            list.add(toAdd);
-            edges++;
-        }
-
-//        Case: Start is not in the map TODO
-
+        list = graph.get(toAdd.getStartVertex());
+        list.add(toAdd);
+        edges++;
     }
 
 
@@ -112,8 +158,13 @@ public class WDGraph<V, E> implements IGraph<V, E> {
         return ret;
     }
 
-
-
+    private Map<IVertex<V>, Integer> initMap() {
+        Map<IVertex<V>, Integer> unvisitedNodes = new HashMap<>();
+        for (IVertex<V> vertex : graph.keySet()) {
+            unvisitedNodes.put(vertex, -1);
+        }
+        return unvisitedNodes;
+    }
 
 
 }
