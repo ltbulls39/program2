@@ -9,4 +9,11 @@ public interface IVertex<V> {
 
     boolean equals(IVertex<V> vertex);
 
+    int getDistance();
+
+    void setDistance(int distance);
+
+    IVertex<V> getLast();
+
+    void setLast(IVertex<V> last);
 }

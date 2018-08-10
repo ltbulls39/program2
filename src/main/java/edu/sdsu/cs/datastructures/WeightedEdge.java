@@ -28,7 +28,7 @@ public class WeightedEdge<E> implements IEdge<E> {
 
     @Override
     public String toString() {
-        return "(" + startVertex + ", " + endVertex + ")" + " Cost: " + cost;
+        return "(" + startVertex + " --> " + endVertex + ")" + " Cost: " + cost;
     }
 
     @Override

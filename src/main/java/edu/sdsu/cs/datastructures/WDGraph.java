@@ -72,29 +72,67 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
     @Override
     public int minimumDistance(IVertex<V> start, IVertex<V> end) {
-        return 0;
+        Set<V> unvisitedNodes = new HashSet<>(nameSet);
+        Set<V> visitedNodes = new HashSet<>();
+        Stack<IVertex<V>> stack = new Stack<>();
+        Map<IVertex<V>, Integer> distanceTable = initMap();
+        Queue<IVertex<V>> queue = new PriorityQueue<>();
+        distanceTable.put(start, 0);
+        start.setDistance(0);
+        queue.offer(start);
+        int shortestDistance;
+
+        IVertex<V> previous = null;
+        while (!queue.isEmpty()) {
+            IVertex<V> current = queue.poll();
+            if (visitedNodes.contains(end.getName())) break;
+
+            if (visitedNodes.contains(current.getName())) {
+                /**
+                 * Discard the current Node, continue from Step 4
+                 * If it is in the queue, we need to remove
+                 * Case - first item in the queue
+                 */
+                continue;
+            }
+            /**
+             * Mark Node as visited by removing it from
+             * unvisited Nodes list, and adding it to
+             * visited Nodes list
+             */
+
+            LinkedList<IEdge<E>> tempList = graph.get(current);
+            for (IEdge<E> neighbor : tempList) {
+                int updatedCost = distanceTable.get(current) + (Integer) neighbor.getCost();
+                if (updatedCost < distanceTable.get(neighbor.getEndVertex())) {
+                    distanceTable.put(neighbor.getEndVertex(), updatedCost);
+                    neighbor.getEndVertex().setDistance(updatedCost);
+                }
+                queue.offer(neighbor.getEndVertex());
+                /**
+                 * Need to check if the Last Node's Last Node is the current Node
+                 */
+
+                if (unvisitedNodes.contains(current.getName())) {
+                    current.setLast(previous);
+                }
+
+            }
+            V currentName = current.getName();
+            unvisitedNodes.remove(currentName);
+            visitedNodes.add(currentName);
+
+            previous = current;
+            stack.push(current);
+        }
+
+        shortestDistance = distanceTable.get(end);
+
+        return shortestDistance;
     }
 
     @Override
     public Iterable<IEdge<E>> shortestPath(IVertex<V> start, IVertex<V> end) {
-        Map<IVertex<V>, Integer> distanceTable = initMap();
-        Queue<IVertex<V>> priorityQueue = new PriorityQueue<>();
-        distanceTable.put(start, 0);
-
-        priorityQueue.offer(start);
-
-        while (!priorityQueue.isEmpty()) {
-            IVertex<V> current = priorityQueue.poll();
-            if (distanceTable.get(current) != -1) {
-                continue;
-            }
-//            TODO change this so it maps to its distance from the node
-            distanceTable.put(current, 1);
-            LinkedList<IEdge<E>> tempList = graph.get(current);
-            for (IEdge<E> edge : tempList) {
-
-            }
-        }
 
         return null;
     }
@@ -161,7 +199,7 @@ public class WDGraph<V, E> implements IGraph<V, E> {
     private Map<IVertex<V>, Integer> initMap() {
         Map<IVertex<V>, Integer> unvisitedNodes = new HashMap<>();
         for (IVertex<V> vertex : graph.keySet()) {
-            unvisitedNodes.put(vertex, -1);
+            unvisitedNodes.put(vertex, Integer.MAX_VALUE);
         }
         return unvisitedNodes;
     }
