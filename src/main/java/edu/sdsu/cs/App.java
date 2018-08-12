@@ -3,7 +3,6 @@ package edu.sdsu.cs;
 import edu.sdsu.cs.datastructures.*;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,20 +22,52 @@ public class App {
         /**
          * Cities, then edges will come in
          */
-        FileReader fileReader = reader("cities.csv");
-        BufferedReader cities = new BufferedReader(fileReader);
-        fileReader = reader("edges.csv");
-        BufferedReader edges = new BufferedReader(fileReader);
-        addVertices(cities);
-        addEdges(edges);
+        FileReader fileReader;
+        BufferedReader cities;
+        BufferedReader edges;
 
-        System.out.println(graph);
+        switch (args.length) {
+            case 0:
+                fileReader = reader("cities.csv");
+                cities = new BufferedReader(fileReader);
+                fileReader = reader("edges.csv");
+                edges = new BufferedReader(fileReader);
+                addVertices(cities);
+                addEdges(edges);
+                break;
+            case 2:
+                fileReader = reader(args[0]);
+                cities = new BufferedReader(fileReader);
+                fileReader = reader(args[1]);
+                edges = new BufferedReader(fileReader);
+                double time = System.nanoTime();
+                addVertices(cities);
+                System.out.println("Time taken to addVertices: " + ((System.nanoTime() - time) / 1000000000));
+                time = System.nanoTime();
+                addEdges(edges);
+                System.out.println("Time taken to addEdges: " + ((System.nanoTime() - time) / 1000000000));
+                break;
+            default:
+                System.out.println("You've entered the incorrect number of command line arguments. Try again next time");
+                System.exit(-1);
+                break;
+        }
+
+        IVertex<String> sd = vertexMap.get("Quang Tri");
+        IVertex<String> lg = vertexMap.get("An Xuyen");
+
+        double time = System.nanoTime();
+        Iterable<IEdge<Integer>> edgeIterator = graph.shortestPath(sd, lg);
+        System.out.println("Time taken to compute: " + ((System.nanoTime() - time) / 1000000000));
+
+        System.out.println(graph.minimumDistance(sd, lg));
         System.out.println();
-        System.out.println();
-        IVertex<String> sanDiego = vertexMap.get("San diego");
-        IVertex<String> lemonGrove = vertexMap.get("Lemon grove");
-        System.out.println(graph.minimumDistance(sanDiego, lemonGrove));
-//        File file = createFile();
+        for (IEdge<Integer> edge : edgeIterator) {
+            System.out.println(edge);
+        }
+
+
+
     }
 
     private static void addEdges(BufferedReader reader) {
@@ -46,8 +77,8 @@ public class App {
                 String[] arr = line.split(",");
                 IVertex<String> start = vertexMap.get(arr[0].trim());
                 IVertex<String> end = vertexMap.get(arr[1].trim());
-                Integer thing = Integer.parseInt(arr[2].trim());
-                IEdge<Integer> edge = new WeightedEdge<>(start, end, thing);
+                Integer cost = Integer.parseInt(arr[2].trim());
+                IEdge<Integer> edge = new WeightedEdge<>(start, end, cost);
                 graph.addEdge(edge);
             }
         }   catch (IOException e) {
@@ -59,7 +90,9 @@ public class App {
         try {
             String line;
             while ((line = reader.readLine()) != null) {
-                IVertex<String> vertex = new GraphVertex<>(line);
+                String[] arr = line.split(",");
+
+                IVertex<String> vertex = new GraphVertex<>(arr[0].trim());
                 vertexSet.add(vertex);
                 vertexMap.put(vertex.getName(), vertex);
                 graph.addVertex(vertex);
@@ -68,17 +101,6 @@ public class App {
             e.printStackTrace();
         }
     }
-    private static File createFile() {
-        try {
-            File file = new File("edges.csv");
-            file.createNewFile();
-            return file;
-        }   catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
 
     public static FileReader reader(String line) {
         try {

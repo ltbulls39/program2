@@ -6,27 +6,16 @@ import java.util.*;
 public class WDGraph<V, E> implements IGraph<V, E> {
     private Set<V> nameSet;
     private Map<IVertex<V>, LinkedList<IEdge<E>>> graph;
-
-    //    FIXME remove unused
-    private Map<V, LinkedList<IEdge<E>>> map;
-//    FIXME remove unused
-
     private int vertices;
     private int edges;
 
-
-
     public WDGraph() {
-        map = new HashMap<>();
         nameSet = new HashSet<>();
         vertices = 0;
         edges = 0;
 
-        //    FIXME remove unused
-        graph = new HashMap<>();
-        //    FIXME remove unused
+        graph = new LinkedHashMap<>();
     }
-
 
     @Override
     public Iterable<IVertex<V>> vertices() {
@@ -72,22 +61,52 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
     @Override
     public int minimumDistance(IVertex<V> start, IVertex<V> end) {
+        Iterable<IEdge<E>> iterator = shortestPath(start, end);
+        int distance = 0;
+        for (IEdge<E> edge : iterator) {
+            distance += (Integer) edge.getCost();
+        }
+
+        return distance;
+    }
+
+    private Iterable<IEdge<E>> returnIterable(final LinkedList<IEdge<E>> returnEdges) {
+        return new Iterable<IEdge<E>>() {
+            @Override
+            public Iterator<IEdge<E>> iterator() {
+                return returnEdges.iterator();
+            }
+        };
+    }
+
+    @Override
+    public Iterable<IEdge<E>> shortestPath(final IVertex<V> start, IVertex<V> end) {
+        Map<IVertex<V>, LinkedList<IEdge<E>>> linkedHashMap = new LinkedHashMap<>();
+        final LinkedList<IEdge<E>> returnEdges = new LinkedList<>();
+
+        if (start.equals(end))      return returnIterable(returnEdges);
+
+        /**
+         * Creating sets of visited and unvisited nodes
+         */
         Set<V> unvisitedNodes = new HashSet<>(nameSet);
-        Set<V> visitedNodes = new HashSet<>();
-        Stack<IVertex<V>> stack = new Stack<>();
         Map<IVertex<V>, Integer> distanceTable = initMap();
         Queue<IVertex<V>> queue = new PriorityQueue<>();
         distanceTable.put(start, 0);
         start.setDistance(0);
         queue.offer(start);
-        int shortestDistance;
 
-        IVertex<V> previous = null;
+
+
         while (!queue.isEmpty()) {
             IVertex<V> current = queue.poll();
-            if (visitedNodes.contains(end.getName())) break;
+            if (!linkedHashMap.containsKey(current)) {
+                linkedHashMap.put(current, new LinkedList<IEdge<E>>());
+            }
 
-            if (visitedNodes.contains(current.getName())) {
+            if (!unvisitedNodes.contains(end.getName())) break;
+
+            if (!unvisitedNodes.contains(current.getName())) {
                 /**
                  * Discard the current Node, continue from Step 4
                  * If it is in the queue, we need to remove
@@ -101,40 +120,68 @@ public class WDGraph<V, E> implements IGraph<V, E> {
              * visited Nodes list
              */
 
-            LinkedList<IEdge<E>> tempList = graph.get(current);
-            for (IEdge<E> neighbor : tempList) {
+            LinkedList<IEdge<E>> neighborList = graph.get(current);
+            for (IEdge<E> neighbor : neighborList) {
                 int updatedCost = distanceTable.get(current) + (Integer) neighbor.getCost();
                 if (updatedCost < distanceTable.get(neighbor.getEndVertex())) {
                     distanceTable.put(neighbor.getEndVertex(), updatedCost);
                     neighbor.getEndVertex().setDistance(updatedCost);
                 }
                 queue.offer(neighbor.getEndVertex());
+
                 /**
-                 * Need to check if the Last Node's Last Node is the current Node
+                 * If current.next has not been visited
+                 *      end = current.next
+                 *      end.last = current
                  */
 
-                if (unvisitedNodes.contains(current.getName())) {
-                    current.setLast(previous);
+                if (unvisitedNodes.contains(neighbor.getEndVertex().getName())) {
+                    neighbor.getEndVertex().setLast(current);
                 }
-
             }
+            /**
+             * Removing the current Node from UnvisitedNodes,
+             * we've seen this already.
+             */
             V currentName = current.getName();
             unvisitedNodes.remove(currentName);
-            visitedNodes.add(currentName);
-
-            previous = current;
-            stack.push(current);
         }
 
-        shortestDistance = distanceTable.get(end);
+        IVertex<V> finalVertex = end;
+        LinkedList<IVertex<V>> answerList = new LinkedList<>();
+        answerList.addFirst(finalVertex);
 
-        return shortestDistance;
-    }
+        while (finalVertex.getLast() != null) {
+            answerList.addFirst(finalVertex.getLast());
+            finalVertex = finalVertex.getLast();
+        }
 
-    @Override
-    public Iterable<IEdge<E>> shortestPath(IVertex<V> start, IVertex<V> end) {
+        /**
+         * At this point, we are guaranteed to have at least two
+         * Vertices in answerList.
+         *
+         * We compare, two at a time, vertices to the start and
+         * end vertices of each edge, which are in order
+         *
+         * We remove edges that our not in the correct order,
+         * since vertices are already in order of correct path
+         *
+         * Store these edges into returnEdges LL
+         */
+        for (int i = 0; i < answerList.size() - 1; i++) {
+            IVertex<V> elementOne = answerList.get(i);
+            IVertex<V> elementTwo = answerList.get(i + 1);
+            LinkedList<IEdge<E>> listOfEdges = graph.get(elementOne);
+            for (IEdge<E> neighbor : listOfEdges) {
+                if (((GraphVertex)neighbor.getStartVertex()).compareTo(elementOne) == 0 &&
+                        ((GraphVertex)neighbor.getEndVertex()).compareTo(elementTwo) == 0) {
+                    returnEdges.add(neighbor);
+                }
+            }
+        }
 
-        return null;
+
+        return returnIterable(returnEdges);
     }
 
     @Override
@@ -183,7 +230,6 @@ public class WDGraph<V, E> implements IGraph<V, E> {
         edges++;
     }
 
-
     @Override
     public String toString() {
         Set<IVertex<V>> set = graph.keySet();
@@ -203,6 +249,5 @@ public class WDGraph<V, E> implements IGraph<V, E> {
         }
         return unvisitedNodes;
     }
-
 
 }
