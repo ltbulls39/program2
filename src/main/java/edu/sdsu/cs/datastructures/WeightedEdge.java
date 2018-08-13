@@ -1,9 +1,18 @@
 package edu.sdsu.cs.datastructures;
 
+/**
+ * @author Nicholas Hernandez
+ *      - cssc0256
+ * @author Bernard Gonzales
+ *      - cssc
+ */
+
 public class WeightedEdge<E> implements IEdge<E> {
     private IVertex startVertex;
     private IVertex endVertex;
     private E cost;
+
+
 
     public WeightedEdge(IVertex startVertex, IVertex endVertex, E cost) {
         this.startVertex = startVertex;

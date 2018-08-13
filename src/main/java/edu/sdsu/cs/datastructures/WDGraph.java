@@ -1,7 +1,13 @@
 package edu.sdsu.cs.datastructures;
 
-
 import java.util.*;
+
+/**
+ * @author Nicholas Hernandez
+ *      - cssc0256
+ * @author Bernard Gonzales
+ *      - cssc
+ */
 
 public class WDGraph<V, E> implements IGraph<V, E> {
     private Set<V> nameSet;
@@ -61,6 +67,9 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
     @Override
     public int minimumDistance(IVertex<V> start, IVertex<V> end) {
+        if (!validInput(start, end))    return -1;
+        if (start.getName().equals(end.getName()))  return -2;
+
         Iterable<IEdge<E>> iterator = shortestPath(start, end);
         int distance = 0;
         for (IEdge<E> edge : iterator) {
@@ -70,18 +79,10 @@ public class WDGraph<V, E> implements IGraph<V, E> {
         return distance;
     }
 
-    private Iterable<IEdge<E>> returnIterable(final LinkedList<IEdge<E>> returnEdges) {
-        return new Iterable<IEdge<E>>() {
-            @Override
-            public Iterator<IEdge<E>> iterator() {
-                return returnEdges.iterator();
-            }
-        };
-    }
-
     @Override
     public Iterable<IEdge<E>> shortestPath(final IVertex<V> start, IVertex<V> end) {
-        Map<IVertex<V>, LinkedList<IEdge<E>>> linkedHashMap = new LinkedHashMap<>();
+        if (!validInput(start, end))   return null;
+
         final LinkedList<IEdge<E>> returnEdges = new LinkedList<>();
 
         if (start.equals(end))      return returnIterable(returnEdges);
@@ -100,10 +101,6 @@ public class WDGraph<V, E> implements IGraph<V, E> {
 
         while (!queue.isEmpty()) {
             IVertex<V> current = queue.poll();
-            if (!linkedHashMap.containsKey(current)) {
-                linkedHashMap.put(current, new LinkedList<IEdge<E>>());
-            }
-
             if (!unvisitedNodes.contains(end.getName())) break;
 
             if (!unvisitedNodes.contains(current.getName())) {
@@ -168,13 +165,13 @@ public class WDGraph<V, E> implements IGraph<V, E> {
          *
          * Store these edges into returnEdges LL
          */
+
         for (int i = 0; i < answerList.size() - 1; i++) {
             IVertex<V> elementOne = answerList.get(i);
             IVertex<V> elementTwo = answerList.get(i + 1);
             LinkedList<IEdge<E>> listOfEdges = graph.get(elementOne);
             for (IEdge<E> neighbor : listOfEdges) {
-                if (((GraphVertex)neighbor.getStartVertex()).compareTo(elementOne) == 0 &&
-                        ((GraphVertex)neighbor.getEndVertex()).compareTo(elementTwo) == 0) {
+                if (neighbor.getStartVertex().equals(elementOne) && neighbor.getEndVertex().equals(elementTwo)) {
                     returnEdges.add(neighbor);
                 }
             }
@@ -248,6 +245,24 @@ public class WDGraph<V, E> implements IGraph<V, E> {
             unvisitedNodes.put(vertex, Integer.MAX_VALUE);
         }
         return unvisitedNodes;
+    }
+
+    private boolean validInput(IVertex<V> start, IVertex<V> end) {
+        if (start == null || end == null)   return false;
+
+        if (!nameSet.contains(start.getName()) || !nameSet.contains(end.getName()))
+            return false;
+
+        return true;
+    }
+
+    private Iterable<IEdge<E>> returnIterable(final LinkedList<IEdge<E>> returnEdges) {
+        return new Iterable<IEdge<E>>() {
+            @Override
+            public Iterator<IEdge<E>> iterator() {
+                return returnEdges.iterator();
+            }
+        };
     }
 
 }

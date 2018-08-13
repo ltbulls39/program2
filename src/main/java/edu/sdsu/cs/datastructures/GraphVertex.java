@@ -1,6 +1,11 @@
 package edu.sdsu.cs.datastructures;
 
-
+/**
+ * @author Nicholas Hernandez
+ *      - cssc0256
+ * @author Bernard Gonzales
+ *      - cssc
+ */
 public class GraphVertex<V extends Comparable<V>> implements IVertex<V>, Comparable<IVertex<V>> {
     private V name;
     private int distanceFromStart;
@@ -57,7 +62,7 @@ public class GraphVertex<V extends Comparable<V>> implements IVertex<V>, Compara
 
     @Override
     public int compareTo(IVertex<V> o) {
-        Integer temp = (Integer) distanceFromStart;
+        Integer temp = distanceFromStart;
         return temp.compareTo(o.getDistance());
     }
 }
